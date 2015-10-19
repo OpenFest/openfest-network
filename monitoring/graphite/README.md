@@ -20,3 +20,7 @@ System is designed to receive data from collectd, pass it trough aggregation/rel
   +-------+
 
 ```
+
+# Running
+ * Via systemd
+ * Webapp is run with uwsgi in nginx
