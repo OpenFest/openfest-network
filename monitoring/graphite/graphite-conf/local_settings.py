@@ -1,0 +1,7 @@
+SECRET_KEY = 'FIXME: CHANGEME'
+TIME_ZONE = 'Europe/Sofia'
+GRAPHITE_ROOT = '/opt/graphite'
+CONF_DIR = '/opt/graphite/conf'
+STORAGE_DIR = '/opt/graphite/storage'
+WHISPER_DIR = '/opt/graphite/storage'
+LOG_DIR = '/var/log/graphite/webapp'
