@@ -1,0 +1,37 @@
+server {
+	# listen on these (must be accessible for tessera)
+	listen 8080 default_server;
+	listen [::]:8080 default_server;
+
+	# root and indexes
+	root /var/www/html;
+	index index.html index.htm index.nginx-debian.html;
+
+	# default server
+	server_name _;
+
+	# status for monitoring (do we need it in all vhosts/ports)
+	location /of2015status {
+		stub_status on;
+		access_log off;
+	}
+
+	# serve static content via nginx and not uwsgi
+	location /content/ {
+		alias /opt/graphite/webapp/content/;
+	}
+
+	# fix the django/graphite bug for admin
+	# and serve via nginx
+	rewrite ^/admin(.*)admin/([^/]+)/([^/]+)\$ /media/\$2/\$3 redirect;
+	location /media/ {
+		alias /usr/local/lib/python2.7/dist-packages/django/contrib/admin/static/admin/;
+	}
+
+	# finally pass everything else to uwsgi
+	location / {
+		add_header Access-Control-Allow-Origin $http_origin;
+		include uwsgi_params;
+		uwsgi_pass 127.0.0.1:3031;
+	}
+}
