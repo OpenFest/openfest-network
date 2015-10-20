@@ -1,0 +1,1 @@
+# Collectd client configs
