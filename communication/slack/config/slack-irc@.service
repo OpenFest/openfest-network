@@ -1,0 +1,12 @@
+[Unit]
+Description=Slack to IRC sync bot (%i)
+After=network.target
+
+[Service]
+User=nobody
+Group=nogroup
+PrivateTmp=yes
+ExecStart=/usr/bin/slack-irc -c /etc/slack-irc/%i.json
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,18 @@
+[{
+	"nickname": "SlackSync",
+	"server": "marla.ludost.net",
+	"token": "CHANGE ME",
+	"channelMapping": {
+		"private": "private"
+		"#bulgaria-hall": "#openfest-bulgaria-hall",
+		"#chamber-hall": "#openfest-chamber-hall",
+		"#third-hall": "#openfest-third-hall"
+	},
+	"ircOptions": {
+		"userName": "slacksync",
+		"realName": "Slack to IRC bidirectional Sync Bot",
+		"debug": true,
+		"secure": "true",
+		"port": 6697
+	}
+}]
