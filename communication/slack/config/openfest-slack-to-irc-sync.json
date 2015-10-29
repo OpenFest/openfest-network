@@ -3,7 +3,7 @@
 	"server": "marla.ludost.net",
 	"token": "CHANGE ME",
 	"channelMapping": {
-		"private": "private"
+		"private": "private",
 		"#bulgaria-hall": "#openfest-bulgaria-hall",
 		"#chamber-hall": "#openfest-chamber-hall",
 		"#third-hall": "#openfest-third-hall"
