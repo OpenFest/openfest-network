@@ -35,6 +35,7 @@ while true ; do
 		_signal=$(grep 'Signal' /var/run/${_start_time}_${_interface} | awk '{print $2}' | tr -d '-')
 		_noise=$(grep 'Noise' /var/run/${_start_time}_${_interface} | awk '{print $5}' | tr -d '-')
 		_bit_rate=$(grep 'Bit Rate' /var/run/${_start_time}_${_interface} | awk '{print $3}')
+                _channel=$(grep 'Channel'  /var/run/${_start_time}_${_interface} | awk '{print $4}')
 		_clients=$(${_iw} ${_interface} station dump | grep '^Station' | wc -l)
 
 		# start emiting metrics
@@ -43,6 +44,7 @@ while true ; do
 		echo -e "PUTVAL ${_HOSTNAME}/${_PLUGIN}-${_interface}/gauge-signal ${_start_time}:${_signal}"
 		echo -e "PUTVAL ${_HOSTNAME}/${_PLUGIN}-${_interface}/gauge-noise ${_start_time}:${_noise}"
 		echo -e "PUTVAL ${_HOSTNAME}/${_PLUGIN}-${_interface}/gauge-bit_rate ${_start_time}:${_bit_rate}"
+                echo -e "PUTVAL ${_HOSTNAME}/${_PLUGIN}-${_interface}/gauge-channel ${_start_time}:${_channel}"
 		echo -e "PUTVAL ${_HOSTNAME}/${_PLUGIN}-${_interface}/gauge-clients ${_start_time}:${_clients}"
 
 		# now let's pick up the statistics
