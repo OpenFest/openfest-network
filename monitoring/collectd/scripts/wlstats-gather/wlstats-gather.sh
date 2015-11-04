@@ -13,8 +13,8 @@
 # Changelog:   2015.05.25 - Initial version
 
 # Variable Definition
-_HOSTNAME='testhost'
-_PERIOD=60 # in seconds
+_HOSTNAME="${COLLECTD_HOSTNAME:-localhost}"
+_PERIOD="${COLLECTD_INTERVAL:-60}"
 _PLUGIN='wlstats'
 
 # Binaries
