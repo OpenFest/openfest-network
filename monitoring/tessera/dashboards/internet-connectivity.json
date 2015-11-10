@@ -1,0 +1,272 @@
+{
+  "id": 2,
+  "title": "Internet Connectivity",
+  "category": "Data",
+  "summary": "",
+  "description": "",
+  "creation_date": "2015-09-20T14:47:17.870112Z",
+  "last_modified_date": "2015-11-07T20:58:59.943634Z",
+  "imported_from": null,
+  "tags": [],
+  "definition": {
+    "options": {},
+    "item_type": "dashboard_definition",
+    "item_id": "d3",
+    "items": [
+      {
+        "title": "Uplink",
+        "item_type": "section",
+        "item_id": "d4",
+        "items": [
+          {
+            "item_type": "row",
+            "item_id": "d27",
+            "items": [
+              {
+                "item_type": "cell",
+                "item_id": "d28",
+                "items": [
+                  {
+                    "item_type": "heading",
+                    "item_id": "d29",
+                    "text": "TX",
+                    "level": 1
+                  }
+                ],
+                "span": 6
+              },
+              {
+                "item_type": "cell",
+                "item_id": "d30",
+                "items": [
+                  {
+                    "item_type": "heading",
+                    "item_id": "d31",
+                    "text": "RX",
+                    "level": 1
+                  }
+                ],
+                "span": 3
+              }
+            ]
+          },
+          {
+            "item_type": "row",
+            "item_id": "d9",
+            "items": [
+              {
+                "item_type": "cell",
+                "item_id": "d10",
+                "items": [
+                  {
+                    "title": "Peak Rate",
+                    "item_type": "jumbotron_singlestat",
+                    "item_id": "d11",
+                    "query": "uplink_tx",
+                    "format": ",.3s",
+                    "transform": "max",
+                    "units": "bps"
+                  }
+                ],
+                "span": 4
+              },
+              {
+                "item_type": "cell",
+                "item_id": "d12",
+                "items": [
+                  {
+                    "title": "Mean Rate",
+                    "item_type": "singlestat",
+                    "item_id": "d13",
+                    "query": "uplink_tx",
+                    "format": ",.3s",
+                    "transform": "mean",
+                    "units": "bps"
+                  },
+                  {
+                    "title": "Current Rate",
+                    "item_type": "singlestat",
+                    "item_id": "d14",
+                    "query": "uplink_tx",
+                    "format": ",.3s",
+                    "transform": "last_non_zero",
+                    "units": "bps"
+                  }
+                ],
+                "span": 2
+              },
+              {
+                "item_type": "cell",
+                "item_id": "d20",
+                "items": [
+                  {
+                    "title": "Peak Rate",
+                    "item_type": "jumbotron_singlestat",
+                    "item_id": "d21",
+                    "query": "uplink_rx",
+                    "format": ",.3s",
+                    "transform": "max",
+                    "units": "bps"
+                  }
+                ],
+                "span": 4
+              },
+              {
+                "item_type": "cell",
+                "item_id": "d22",
+                "items": [
+                  {
+                    "title": "Mean Rate",
+                    "item_type": "singlestat",
+                    "item_id": "d23",
+                    "query": "uplink_rx",
+                    "format": ",.3s",
+                    "transform": "mean",
+                    "units": "bps"
+                  },
+                  {
+                    "title": "Current Rate",
+                    "item_type": "singlestat",
+                    "item_id": "d24",
+                    "query": "uplink_rx",
+                    "format": ",.3s",
+                    "transform": "last_non_zero",
+                    "units": "bps"
+                  }
+                ],
+                "span": 2
+              }
+            ]
+          },
+          {
+            "item_type": "row",
+            "item_id": "d5",
+            "items": [
+              {
+                "item_type": "cell",
+                "item_id": "d6",
+                "items": [
+                  {
+                    "title": "",
+                    "options": {
+                      "palette": "tableau10",
+                      "y1": {
+                        "label": "bps"
+                      }
+                    },
+                    "item_type": "bar_chart",
+                    "item_id": "d8",
+                    "height": 4,
+                    "query": "uplink_combined",
+                    "legend": "none",
+                    "hide_zero_series": false,
+                    "stack_mode": "none"
+                  }
+                ],
+                "span": 12
+              }
+            ]
+          }
+        ],
+        "level": 1,
+        "horizontal_rule": false,
+        "layout": "fixed"
+      }
+    ],
+    "queries": {
+      "stations": {
+        "name": "stations",
+        "targets": [
+          "received.*.iwinfo-wlan*.stations.value"
+        ]
+      },
+      "uplink_combined": {
+        "name": "uplink_combined",
+        "targets": [
+          "group(scale(perSecond(received.eric.interface-eth1_50.if_octets.tx),8),\n                            scale(perSecond(received.eric.interface-eth1_50.if_octets.rx),-8))"
+        ]
+      },
+      "uplink_rx": {
+        "name": "uplink_rx",
+        "targets": [
+          "scale(perSecond(received.eric.interface-eth1_50.if_octets.rx),8)"
+        ]
+      },
+      "uplink_tx": {
+        "name": "uplink_tx",
+        "targets": [
+          "scale(perSecond(received.eric.interface-eth1_50.if_octets.tx),8)"
+        ]
+      },
+      "video_combined": {
+        "name": "video_combined",
+        "targets": [
+          "group(scale(perSecond(received.eric.interface-eth1_203.if_octets.tx),8), scale(perSecond(received.eric.interface-eth1_203.if_octets.rx),-8))"
+        ]
+      },
+      "video_rx": {
+        "name": "video_rx",
+        "targets": [
+          "scale(perSecond(received.eric.interface-eth1_203.if_octets.rx),8)"
+        ]
+      },
+      "video_tx": {
+        "name": "video_tx",
+        "targets": [
+          "scale(perSecond(received.eric.interface-eth1_203.if_octets.tx),8)"
+        ]
+      },
+      "wifi_noise": {
+        "name": "wifi_noise",
+        "targets": [
+          "dBmtomW(received.*.iwinfo-wlan*.signal_noise.value)"
+        ]
+      },
+      "wifi_noise_dbm": {
+        "name": "wifi_noise_dbm",
+        "targets": [
+          "received.*.iwinfo-wlan*.signal_noise.value"
+        ]
+      },
+      "wired_combined": {
+        "name": "wired_combined",
+        "targets": [
+          "group(scale(perSecond(received.eric.interface-eth1_201.if_octets.tx),8), scale(perSecond(received.eric.interface-eth1_201.if_octets.rx),-8))"
+        ]
+      },
+      "wired_rx": {
+        "name": "wired_rx",
+        "targets": [
+          "scale(perSecond(received.eric.interface-eth1_201.if_octets.rx),8)"
+        ]
+      },
+      "wired_tx": {
+        "name": "wired_tx",
+        "targets": [
+          "scale(perSecond(received.eric.interface-eth1_201.if_octets.tx),8)"
+        ]
+      },
+      "wireless_combined": {
+        "name": "wireless_combined",
+        "targets": [
+          "group(scale(perSecond(received.eric.interface-eth1_202.if_octets.tx),8), scale(perSecond(received.eric.interface-eth1_202.if_octets.rx),-8))"
+        ]
+      },
+      "wireless_rx": {
+        "name": "wireless_rx",
+        "targets": [
+          "scale(perSecond(received.eric.interface-eth1_202.if_octets.rx),8)"
+        ]
+      },
+      "wireless_tx": {
+        "name": "wireless_tx",
+        "targets": [
+          "scale(perSecond(received.eric.interface-eth1_202.if_octets.tx),8)"
+        ]
+      }
+    }
+  },
+  "href": "/api/dashboard/2",
+  "view_href": "/dashboards/2/internet-connectivity",
+  "definition_href": "/api/dashboard/2/definition"
+}
