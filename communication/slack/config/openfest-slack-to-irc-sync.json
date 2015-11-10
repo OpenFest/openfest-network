@@ -2,11 +2,13 @@
 	"nickname": "SlackSync",
 	"server": "marla.ludost.net",
 	"token": "CHANGE ME",
+	"logfile": "/path/to/logfile.log",
 	"channelMapping": {
 		"private": "private",
 		"#bulgaria-hall": "#openfest-bulgaria-hall",
 		"#chamber-hall": "#openfest-chamber-hall",
-		"#third-hall": "#openfest-third-hall"
+		"#third-hall": "#openfest-third-hall",
+		"#video": "#openfestvideo"
 	},
 	"ircOptions": {
 		"userName": "slacksync",
