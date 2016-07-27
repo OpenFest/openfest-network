@@ -1,0 +1,173 @@
+{
+  "id": 3,
+  "title": "Wireless",
+  "category": "Data",
+  "summary": "",
+  "description": "",
+  "creation_date": "2015-11-07T06:32:41.530934Z",
+  "last_modified_date": "2015-11-07T22:08:31.369260Z",
+  "imported_from": null,
+  "tags": [],
+  "definition": {
+    "options": {},
+    "item_type": "dashboard_definition",
+    "item_id": "d3",
+    "items": [
+      {
+        "item_type": "section",
+        "item_id": "d4",
+        "items": [
+          {
+            "item_type": "row",
+            "item_id": "d5",
+            "items": [
+              {
+                "item_type": "cell",
+                "item_id": "d13",
+                "items": [
+                  {
+                    "options": {
+                      "palette": "tableau10"
+                    },
+                    "item_type": "bar_chart",
+                    "item_id": "d14",
+                    "height": 4,
+                    "query": "stations",
+                    "legend": "none",
+                    "hide_zero_series": false,
+                    "stack_mode": "stack"
+                  }
+                ],
+                "span": 12
+              }
+            ]
+          },
+          {
+            "item_type": "row",
+            "item_id": "d8",
+            "items": [
+              {
+                "item_type": "cell",
+                "item_id": "d9",
+                "items": [
+                  {
+                    "title": "5GHz vs 2.4GHz",
+                    "options": {
+                      "palette": "tableau10",
+                      "y1": {
+                        "label": "Stations"
+                      }
+                    },
+                    "item_type": "bar_chart",
+                    "item_id": "d10",
+                    "query": "stations2_5",
+                    "legend": "simple",
+                    "hide_zero_series": false,
+                    "stack_mode": "none"
+                  },
+                  {
+                    "item_type": "markdown",
+                    "item_id": "d15",
+                    "text": "The number of 5GHz associations (positive numbers) vs the number of 2.4 GHz associations (negative).",
+                    "raw": false
+                  }
+                ],
+                "span": 12
+              }
+            ]
+          },
+          {
+            "item_type": "row",
+            "item_id": "d16",
+            "items": [
+              {
+                "item_type": "cell",
+                "item_id": "d17",
+                "items": [
+                  {
+                    "title": "Stations in Per Hall",
+                    "options": {
+                      "palette": "numbers6",
+                      "y1": {
+                        "label": "Stations"
+                      }
+                    },
+                    "item_type": "bar_chart",
+                    "item_id": "d18",
+                    "query": "stations_for_domain",
+                    "legend": "simple",
+                    "hide_zero_series": false,
+                    "stack_mode": "stack"
+                  }
+                ],
+                "span": 12
+              }
+            ]
+          }
+        ],
+        "level": 1,
+        "horizontal_rule": false,
+        "layout": "fixed"
+      }
+    ],
+    "queries": {
+      "stations": {
+        "name": "stations",
+        "targets": [
+          "sumSeries(received.ap-*.iwinfo-wlan*.stations.value)"
+        ]
+      },
+      "stations2_5": {
+        "name": "stations2_5",
+        "targets": [
+          "group(sumSeries(received.ap-*-ac.iwinfo-wlan0.stations.value, received.ap-*-an.iwinfo-wlan1.stations.value),\nscale(sumSeries(received.ap-*-legacy.iwinfo-wlan0.stations.value),-1), scale(sumSeries(received.ap-*-ac.iwinfo-wlan1.stations.value, received.ap-*-an.iwinfo-wlan0.stations.value),-1))"
+        ]
+      },
+      "stations_bulgaria": {
+        "name": "stations_bulgaria",
+        "targets": [
+          "sumSeries(received.ap-bulgaria-*.iwinfo-wlan*.stations.value)"
+        ]
+      },
+      "stations_chamber": {
+        "name": "stations_chamber",
+        "targets": [
+          "sumSeries(received.ap-chamber-*.iwinfo-wlan*.stations.value)"
+        ]
+      },
+      "stations_for_domain": {
+        "name": "stations_for_domain",
+        "targets": [
+          "group(sumSeries(received.ap-bulgaria-*.iwinfo-wlan*.stations.value),\nsumSeries(received.ap-lobby1-*.iwinfo-wlan*.stations.value),\nsumSeries(received.ap-chamber-*.iwinfo-wlan*.stations.value),\nsumSeries(received.ap-marble-*.iwinfo-wlan*.stations.value),\nsumSeries(received.ap-music-*.iwinfo-wlan*.stations.value),\nsumSeries(received.ap-lobby2-*.iwinfo-wlan*.stations.value))"
+        ]
+      },
+      "stations_lobby1": {
+        "name": "stations_lobby1",
+        "targets": [
+          "sumSeries(received.ap-lobby1-*.iwinfo-wlan*.stations.value)"
+        ]
+      },
+      "stations_lobby2": {
+        "name": "stations_lobby2",
+        "targets": [
+          "sumSeries(received.ap-lobby2-*.iwinfo-wlan*.stations.value)"
+        ]
+      },
+      "stations_marble": {
+        "name": "stations_marble",
+        "targets": [
+          "sumSeries(received.ap-marble-*.iwinfo-wlan*.stations.value)"
+        ]
+      },
+      "stations_music": {
+        "name": "stations_music",
+        "targets": [
+          "sumSeries(received.ap-music-*.iwinfo-wlan*.stations.value)"
+        ]
+      }
+    }
+  },
+  "href": "/api/dashboard/3",
+  "view_href": "/dashboards/3/wireless",
+  "definition_href": "/api/dashboard/3/definition"
+}
