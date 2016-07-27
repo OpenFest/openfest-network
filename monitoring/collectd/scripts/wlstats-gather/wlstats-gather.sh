@@ -6,11 +6,13 @@
 # Prereqs:     OpenWRT compatible system / wlinfo / wl
 # Used via:    Collectd exec plugin type
 # Author:      Vladimir Vitkov <vvitkov@linux-bg.org>
-# 
+#              Petko Bordjukov <bordjukov@gmail.com>
+#
 # Version:     0.1
 # Date:        2015.05.25
 #
 # Changelog:   2015.05.25 - Initial version
+#              2015.07.27 - Rework/extension
 
 # Variable Definition
 _HOSTNAME="${COLLECTD_HOSTNAME:-localhost}"
@@ -23,40 +25,108 @@ _iw='iw'
 
 # main loop
 while true ; do
-	_start_time=$(date +%s)
+    for _phy in /sys/kernel/debug/ieee80211/phy*; do
+        for _netdev in $_phy/netdev:* ; do
+            # single cat call
+            _metric_group="$(basename ${_phy})-$(basename ${_netdev})"
 
-	# do work
-	for _interface in $(${_iwinfo} | grep 'ESSID' | awk '{print $1}') ; do
-	#for _interface in wlan0 ; do
-		# get detailed essid info and prep for send
-		${_iwinfo} ${_interface} info > /var/run/${_start_time}_${_interface}
-		_tx_power=$(grep 'Tx-Power' /var/run/${_start_time}_${_interface} | awk '{print $2}')
-		_link_quality=$(grep 'Link Quality' /var/run/${_start_time}_${_interface} | awk '{print $6}' | cut -d'/' -f1)
-		_signal=$(grep 'Signal' /var/run/${_start_time}_${_interface} | awk '{print $2}' | tr -d '-')
-		_noise=$(grep 'Noise' /var/run/${_start_time}_${_interface} | awk '{print $5}' | tr -d '-')
-		_bit_rate=$(grep 'Bit Rate' /var/run/${_start_time}_${_interface} | awk '{print $3}')
-                _channel=$(grep 'Channel'  /var/run/${_start_time}_${_interface} | awk '{print $4}')
-		_clients=$(${_iw} ${_interface} station dump | grep '^Station' | wc -l)
+            for _metric in "num_buffered_multicast" "dtim_count" "num_sta_ps" "num_mcast_sta" "txpower"; do
+                echo -e "PUTVAL ${_HOSTNAME}/${_PLUGIN}-${_metric_group}/gauge-${_metric} interval=${_PERIOD} N:$(cat ${_netdev}/${_metric} 2>/dev/null)"
+            done
 
-		# start emiting metrics
-		echo -e "PUTVAL ${_HOSTNAME}/${_PLUGIN}-${_interface}/gauge-tx_power ${_start_time}:${_tx_power}"
-		echo -e "PUTVAL ${_HOSTNAME}/${_PLUGIN}-${_interface}/gauge-link_quality ${_start_time}:${_link_quality}"
-		echo -e "PUTVAL ${_HOSTNAME}/${_PLUGIN}-${_interface}/gauge-signal ${_start_time}:${_signal}"
-		echo -e "PUTVAL ${_HOSTNAME}/${_PLUGIN}-${_interface}/gauge-noise ${_start_time}:${_noise}"
-		echo -e "PUTVAL ${_HOSTNAME}/${_PLUGIN}-${_interface}/gauge-bit_rate ${_start_time}:${_bit_rate}"
-                echo -e "PUTVAL ${_HOSTNAME}/${_PLUGIN}-${_interface}/gauge-channel ${_start_time}:${_channel}"
-		echo -e "PUTVAL ${_HOSTNAME}/${_PLUGIN}-${_interface}/gauge-clients ${_start_time}:${_clients}"
+            _stations=`ls -1 ${_netdev}/stations/ | wc -l`
+            _vht_stations=`grep -r 'VHT supported' ${_netdev}/stations/*/vht_capa 2>/dev/null | wc -l`
+            _ht_stations=`grep -r 'ht supported' ${_netdev}/stations/*/ht_capa 2>/dev/null | wc -l`
 
-		# now let's pick up the statistics
-		for _metric in $(ls -1 /sys/kernel/debug/ieee80211/*/netdev:${_interface}/../statistics/) ; do
-			echo -e "PUTVAL ${_HOSTNAME}/${_PLUGIN}-${_interface}/counter-$(echo ${_metric}) ${_start_time}:$(cat /sys/kernel/debug/ieee80211/*/netdev:${_interface}/../statistics/${_metric})"
-		done
+            echo -e "PUTVAL ${_HOSTNAME}/${_PLUGIN}-${_metric_group}/gauge-stations interval=${_PERIOD} N:${_stations}"
+            echo -e "PUTVAL ${_HOSTNAME}/${_PLUGIN}-${_metric_group}/gauge-ht_stations interval=${_PERIOD} N:${_ht_stations}"
+            echo -e "PUTVAL ${_HOSTNAME}/${_PLUGIN}-${_metric_group}/gauge-vht_stations interval=${_PERIOD} N:${_vht_stations}"
 
-		# nuke the temp file
-		rm -f /var/run/${_start_time}_${_interface}
+            if [ $_stations -gt 0 ]; then
+                for _metric in "tx_retry_count" "tx_retry_failed" "rx_dropped" "rx_duplicates" "current_tx_rate" "beacon_loss_count" "last_signal" "connected_time" "inactive_ms" "num_ps_buf_frames"; do
+                    _avg_value=`awk 2>/dev/null '{sum+=$1} END { print sum/NR}' ${_netdev}/stations/*/${_metric}`
+                    echo -e "PUTVAL ${_HOSTNAME}/${_PLUGIN}-${_metric_group}/gauge-avg_${_metric} interval=${_PERIOD} N:${_avg_value}"
+                done
+            fi
+
+            if [ -d "${_phy}/ath9k" ]; then
+                _interface=$(echo ${_netdev} | sed 's/.*\://')
+                ${_iw} dev ${_interface} survey dump | grep -A 5 'in use' > /tmp/${_interface}.survey
+                cat /tmp/${_interface}.survey | grep 'channel' | sed 's/ ms$//' | sed $'s/\t//g' | \
+                    sed 's/ /_/g' | awk -vhostname="${_HOSTNAME}" \
+                                        -vplugin="${_PLUGIN}" \
+                                        -vmetric_group="${_metric_group}-ath9k-survey" \
+                                        -vinterval="${_PERIOD}" \
+                                        -F : \
+                                        '{printf "PUTVAL %s/%s-%s/counter-%s interval=%s N:%s\n", hostname, plugin, metric_group, tolower($1), interval, $2}'
+            elif [ -d "${_phy}/ath10k" ]; then
+                _interface=$(echo ${_netdev} | sed 's/.*\://')
+                _interface=$(echo ${_netdev} | sed 's/.*\://')
+                ${_iw} dev ${_interface} survey dump | grep -A 3 'in use' > /tmp/${_interface}.survey
+                cat /tmp/${_interface}.survey | grep 'channel' | sed 's/ ms$//' | sed $'s/\t//g' | \
+                    sed 's/ /_/g' | awk -vhostname="${_HOSTNAME}" \
+                                        -vplugin="${_PLUGIN}" \
+                                        -vmetric_group="${_metric_group}-ath10k-survey" \
+                                        -vinterval="${_PERIOD}" \
+                                        -F : \
+                                        '{printf "PUTVAL %s/%s-%s/gauge-%s interval=%s N:%s\n", hostname, plugin, metric_group, tolower($1), interval, $2}'
+            fi
+
+        done
+
+        _metric_group="$(basename ${_phy})"
+
+        if [ -d "${_phy}/ath9k" ]; then
+            cat $_phy/ath9k/recv | \
+                sed 's/^ *\(.*\w\) *: *\([^ ]\)*$/\1:\2/g' | \
+                sed 's/ /_/' | awk -vhostname="${_HOSTNAME}" \
+                                   -vplugin="${_PLUGIN}" \
+                                   -vmetric_group="${_metric_group}-ath9k-recv" \
+                                   -vinterval="${_PERIOD}" \
+                                   -F : \
+                                   '{printf "PUTVAL %s/%s-%s/counter-%s interval=%s N:%s\n", hostname, plugin, metric_group, tolower($1), interval, $2}'
+
+            cat $_phy/ath9k/phy_err | \
+                sed 's/^ *\(.*\w\) *: *\([^ ]\)*$/\1:\2/g' | \
+                sed 's/ /_/' | awk -vhostname="${_HOSTNAME}" \
+                                   -vplugin="${_PLUGIN}" \
+                                   -vmetric_group="${_metric_group}-ath9k-phy_err" \
+                                   -vinterval="${_PERIOD}" \
+                                   -F : \
+                                   '{printf "PUTVAL %s/%s-%s/counter-%s interval=%s N:%s\n", hostname, plugin, metric_group, tolower($1), interval, $2}'
+
+            cat $_phy/ath9k/dfs_stats | grep '^ ' | \
+                sed 's/^ *\(.*\w\) *: *\([^ ]\)*$/\1:\2/g' | \
+                sed 's/ /_/g' | \
+                sed 's/\.//g' | awk -vhostname="${_HOSTNAME}" \
+                                    -vplugin="${_PLUGIN}" \
+                                    -vmetric_group="${_metric_group}-ath9k-dfs_stats" \
+                                    -vinterval="${_PERIOD}" \
+                                    -F : \
+                                   '{printf "PUTVAL %s/%s-%s/counter-%s interval=%s N:%s\n", hostname, plugin, metric_group, tolower($1), interval, $2}'
+
+            for _queue in $_phy/ath9k/qlen*; do
+                echo -e "PUTVAL ${_HOSTNAME}/${_PLUGIN}-${_metric_group}-ath9k/gauge-$(basename $_queue) interval=${_PERIOD} N:$(cat ${_queue})"
+            done
+
+        elif [ -d "${_phy}/ath10k" ]; then
+            cat $_phy/ath10k/dfs_stats | grep ':.*[0-9]$' | \
+                sed 's/^ *\(.*\w\) *: *\([^ ]\)*$/\1:\2/g' | \
+                sed 's/ /_/g' | \
+                sed 's/\.//g' | awk -vhostname="${_HOSTNAME}" \
+                                    -vplugin="${_PLUGIN}" \
+                                    -vmetric_group="${_metric_group}-ath10k-dfs_stats" \
+                                    -vinterval="${_PERIOD}" \
+                                    -F : \
+                                   '{printf "PUTVAL %s/%s-%s/counter-%s interval=%s N:%s\n", hostname, plugin, metric_group, tolower($1), interval, $2}'
+        fi
+
+        for _metric in ${_phy}/statistics/* ; do
+            _metric_name="$(basename ${_metric})"
+	    echo -e "PUTVAL ${_HOSTNAME}/${_PLUGIN}-${_metric_group}-statistics/counter-$(echo ${_metric_name}) N:$(cat ${_metric} 2>/dev/null)"
 	done
 
-	# now calculate sleep time
-	_end_time=$(date +%s)
-	sleep $(echo ${_PERIOD} ${_end_time} ${_start_time} | awk '{print $1 - $2 + $3 }')
+    done
+
+    sleep ${_PERIOD}
 done
